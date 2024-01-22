@@ -1,0 +1,10 @@
+img {
+    object-fit: contain;
+    max-width: 100%;
+}
+.primary-img {
+    height: 300px;
+}
+.imges {
+    height: 150px;
+}
