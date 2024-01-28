@@ -1,3 +1,7 @@
+import pagenation from './pageComponent.js'
+import updateModal from './updateModalComponent.js'
+import delModal from './delModalComponent.js'
+
 const { createApp } = Vue;
 const url = "https://vue3-course-api.hexschool.io/v2";
 const path = "nian-api";
@@ -12,8 +16,6 @@ if(token === "" || token === null){
     window.location.href="./login.html"
 }
 
-let updateModal = null;
-let delModal = null;
 let myToast = null;
 
 
@@ -26,14 +28,21 @@ const app = createApp({
             product: {},
             products: [],
             isNew: false,
-            toastContent:'Hi'
+            toastContent:'Hi',
+            pagination: {}
         }
     },
+    components: {
+        pagenation,
+        updateModal,
+        delModal
+    },
     methods: {
-        getProducts() {
-            axios.get(`${url}/api/${path}/admin/products`)
+        getProducts(page = 1) {
+            axios.get(`${url}/api/${path}/admin/products/?page=${page}`)
                 .then((res) => {
                     this.products = res.data.products;
+                    this.pagination = res.data.pagination;
                 })
                 .catch((error) => {
                     console.dir(error);
@@ -58,7 +67,7 @@ const app = createApp({
                     imagesUrl:[]
                 }
                 this.isNew = true;
-                updateModal.show();
+                this.$refs.uModal.openModal();
                 
             }else if(status === 'edit') {
                 this.tempProduct = {
@@ -66,10 +75,10 @@ const app = createApp({
                     ...item,
                 };
                 this.isNew = false;
-                updateModal.show();
+                this.$refs.uModal.openModal();
             }else {
                 this.tempProduct = {...item};
-                delModal.show();
+                this.$refs.dModal.openModal();
             }
             
         },
@@ -77,7 +86,7 @@ const app = createApp({
             this.product.data = this.tempProduct;
             axios.post(`${url}/api/${path}/admin/product`,this.product)
                 .then((res) => {
-                    updateModal.hide();
+                    this.$refs.uModal.closeModal();
                     this.toastContent = '產品建立成功。';
                     myToast.show();
                     this.getProducts();
@@ -92,7 +101,7 @@ const app = createApp({
                     this.toastContent = '成功刪除一筆資料。';
                     myToast.show();
                     this.getProducts();
-                    delModal.hide();
+                    this.$refs.dModal.closeModal();
                 })
                 .catch((error) => {
                     alert(error.data.message);
@@ -103,7 +112,7 @@ const app = createApp({
             axios.put(`${url}/api/${path}/admin/product/${this.tempProduct.id}`, this.product)
                 .then((res) => {
                     this.toastContent = '修改成功。';
-                    updateModal.hide();
+                    this.$refs.uModal.closeModal();
                     myToast.show();
                     this.getProducts();
                 })
@@ -117,15 +126,6 @@ const app = createApp({
         this.checkLogin();
         this.getProducts();
         
-        //Modal
-        updateModal = new bootstrap.Modal(document.getElementById('updateProductModal'), {
-            keyboard: false,
-          });
-        
-        delModal = new bootstrap.Modal(document.getElementById('delModal'), {
-            keyboard: false,
-          });
-
         //toast
         myToast = new bootstrap.Toast(document.getElementById('myToast'));
     },
